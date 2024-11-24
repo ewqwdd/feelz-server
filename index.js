@@ -49,7 +49,8 @@ app.post("/webhook", async (req, res) => {
 
         // Update member data with order details
         if (member) {
-          const json = member.data?.json ?? { products: [], orders: [] };
+          console.log(member)
+          const json = member?.json ?? { products: [], orders: [] };
           if (!json.orders.includes(order_id)) {
             json.products.push(...order.lineItems.map((item) => ({ name: item.name, quantity: item.quantity, amount: item.totalMoney.amount.toString() })));
             json.orders.push(order_id);
