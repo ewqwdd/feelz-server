@@ -45,11 +45,12 @@ app.post("/webhook", async (req, res) => {
 
         // find member in memberstack
         const all = await memberstack.members.list({limit: 99999})
-        const member = all.data.find(m => m.customFields?.square_id === customerId);
+        const found = all.data.find(m => m.customFields?.square_id === customerId);
 
         // Update member data with order details
-        if (member) {
-          console.log(member)
+        if (found) {
+          const member = await memberstack.members.retrieve({ id: found.id });
+          console.log("Member found", member);
           const json = member?.json ?? { products: [], orders: [] };
           if (!json.orders.includes(order_id)) {
             json.products.push(...order.lineItems.map((item) => ({ name: item.name, quantity: item.quantity, amount: item.totalMoney.amount.toString() })));
