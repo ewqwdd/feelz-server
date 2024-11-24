@@ -102,7 +102,7 @@ app.post("/checkout", async (req, res) => {
         idempotencyKey: uuid(),
       },
       askForShippingAddress: true,
-      redirectUrl: "https://feelz-beverages.webflow.io/thanks",
+      redirectUrl: process.env.WEBFLOW_URL + "/thanks",
     });
 
     res.json({ url: response.result.checkout.checkoutPageUrl });
