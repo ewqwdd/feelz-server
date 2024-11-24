@@ -49,7 +49,7 @@ app.post("/webhook", async (req, res) => {
 
         // Update member data with order details
         if (found) {
-          const member = await memberstack.members.retrieve({ id: found.id });
+          const {data: member} = await memberstack.members.retrieve({ id: found.id });
           console.log("Member found", member);
           const json = member?.json ?? { products: [], orders: [] };
           if (!json.orders.includes(order_id)) {
