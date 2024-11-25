@@ -69,11 +69,12 @@ app.post("/checkout", async (req, res) => {
 
   let customerId;
   let email;
+  let member;
 
   try {
     // Check if member exists in memberstack and create customer in square
     if (id) {
-      const member = await memberstack.members.retrieve({ id });
+      member = await memberstack.members.retrieve({ id });
       if (member) {
         const { auth, customFields } = member.data;
         email = auth.email;
@@ -107,6 +108,10 @@ app.post("/checkout", async (req, res) => {
       askForShippingAddress: true,
       redirectUrl: process.env.WEBFLOW_URL + "/thanks",
       prePopulateBuyerEmail: email,
+      prePopulateShippingAddress: {
+        firstName: member?.data?.auth?.customFields?.["first-name"],
+        lastName: member?.data?.auth?.customFields?.["last-name"],
+      }
     });
 
     res.json({ url: response.result.checkout.checkoutPageUrl });
