@@ -69,14 +69,15 @@ app.post("/checkout", async (req, res) => {
 
   let customerId;
   let email;
-  let member;
+  let customFields;
 
   try {
     // Check if member exists in memberstack and create customer in square
     if (id) {
-      member = await memberstack.members.retrieve({ id });
+      const member = await memberstack.members.retrieve({ id });
       if (member) {
-        const { auth, customFields } = member.data;
+        const { auth } = member.data;
+        customFields = member.data.customFields;
         email = auth.email;
         if (customFields.square_id) {
           customerId = customFields.square_id;
@@ -92,7 +93,7 @@ app.post("/checkout", async (req, res) => {
         }
       }
     }
-    console.log('customerId', customerId)
+    console.log('customFields', customFields)
 
     // Create checkout
     const response = await client.checkoutApi.createCheckout(LOCATION_ID, {
@@ -109,10 +110,12 @@ app.post("/checkout", async (req, res) => {
       redirectUrl: process.env.WEBFLOW_URL + "/thanks",
       prePopulateBuyerEmail: email,
       prePopulateShippingAddress: {
-        firstName: member?.data?.auth?.customFields?.["first-name"],
-        lastName: member?.data?.auth?.customFields?.["last-name"],
+        firstName: customFields?.["first-name"],
+        lastName: customFields?.["last-name"],
       }
     });
+
+    console.log(response.result.checkout)
 
     res.json({ url: response.result.checkout.checkoutPageUrl });
     return;
