@@ -52,9 +52,11 @@ app.post("/webhook", async (req, res) => {
           const {data: member} = await memberstack.members.retrieve({ id: found.id });
           console.log("Member found", member);
           const json = member?.json ?? { products: [], orders: [] };
-          if (!json.orders.includes(order_id)) {
-            json.products.push(...order.lineItems.map((item) => ({ name: item.name, quantity: item.quantity, amount: item.totalMoney.amount.toString() })));
-            json.orders.push(order_id);
+          if (!Object.keys(json.orders).includes(order_id)) {
+            json.orders[order_id] = {
+              items: order.lineItems.map((item) => ({ name: item.name, quantity: item.quantity, amount: item.totalMoney.amount.toString() })),
+              date: new Date().toISOString(),
+            };
             await memberstack.members.update({ id: member.id, data: { json } });
             console.log("Member updated");
           }
@@ -93,7 +95,6 @@ app.post("/checkout", async (req, res) => {
         }
       }
     }
-    console.log('customFields', customFields)
 
     // Create checkout
     const response = await client.checkoutApi.createCheckout(LOCATION_ID, {
@@ -115,7 +116,6 @@ app.post("/checkout", async (req, res) => {
       }
     });
 
-    console.log(response.result.checkout)
 
     res.json({ url: response.result.checkout.checkoutPageUrl });
     return;
