@@ -51,7 +51,7 @@ app.post("/webhook", async (req, res) => {
         if (found) {
           const {data: member} = await memberstack.members.retrieve({ id: found.id });
           console.log("Member found", member);
-          const json = member?.json ?? { orders: {} };
+          const json = member?.json || { orders: {} };
           if (!Object.keys(json.orders).includes(order_id)) {
             json.orders[order_id] = {
               items: order.lineItems.map((item) => ({ name: item.name, quantity: item.quantity, amount: item.totalMoney.amount.toString() })),
