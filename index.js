@@ -96,6 +96,8 @@ app.post("/checkout", async (req, res) => {
       }
     }
 
+    const summary = products.map(({name, quantity, basePriceMoney}) => ({name, quantity, amount: basePriceMoney?.amount * Number(quantity)}));
+
     // Create checkout
     const response = await client.checkoutApi.createCheckout(LOCATION_ID, {
       idempotencyKey: uuid(),
@@ -108,7 +110,7 @@ app.post("/checkout", async (req, res) => {
         idempotencyKey: uuid(),
       },
       askForShippingAddress: true,
-      redirectUrl: process.env.WEBFLOW_URL + "/thanks",
+      redirectUrl: process.env.WEBFLOW_URL + "/thanks?products=" + encodeURI(JSON.stringify(summary)),
       prePopulateBuyerEmail: email,
       prePopulateShippingAddress: {
         firstName: customFields?.["first-name"],
