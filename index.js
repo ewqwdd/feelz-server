@@ -5,6 +5,7 @@ require("dotenv").config();
 const initSubscribe = require("./subscription");
 const memberstackAdmin = require("@memberstack/admin");
 const { v4: uuid } = require("uuid");
+const lookup = require('country-code-lookup')
 
 
 const app = express();
@@ -72,6 +73,7 @@ app.post("/checkout", async (req, res) => {
   let customerId;
   let email;
   let customFields;
+  let iso;
 
   try {
     // Check if member exists in memberstack and create customer in square
@@ -98,6 +100,9 @@ app.post("/checkout", async (req, res) => {
 
     const summary = products.map(({name, quantity, basePriceMoney}) => ({name, quantity, amount: basePriceMoney?.amount * Number(quantity)}));
 
+    if (customFields?.country) {
+      iso = lookup.byCountry(customFields.country)?.iso2
+    }
     // Create checkout
     const response = await client.checkoutApi.createCheckout(LOCATION_ID, {
       idempotencyKey: uuid(),
@@ -115,7 +120,7 @@ app.post("/checkout", async (req, res) => {
       prePopulateShippingAddress: {
         firstName: customFields?.["first-name"],
         lastName: customFields?.["last-name"],
-        country: customFields?.country,
+        country: iso,
         addressLine1: customFields?.address,
         addressLine2: customFields?.["apartment-suite-etc"],
         addressLine3: customFields?.city,
@@ -133,39 +138,6 @@ app.post("/checkout", async (req, res) => {
   }
 });
 
-app.post("/apply", async (req, res) => {
-  const data = req.body
-  try {
-
-    const member = await memberstack.members.create({
-      email: data.Email,
-      password: data.Password,
-      customFields: {
-        address: data.Address,
-        city: data.City,
-        state: data.State,
-        'apartment-suite-etc': data.Appartment,
-        'company-name': data['Company-name'],
-        country: data.Country,
-        'first-name': data['First-name'],
-        'last-name': data['Last-name'],
-        'phone-number': data['Phone-number'],
-        position: data.Position,
-        'postal-code': data['Postal-code'],
-        'state-or-province': data.State,
-        'tax-id': data['Tax-ID'],
-        'website': data.Website
-      },
-      plans: [{
-       "planId": "pln_lead-yqn404py"
-     }]
-    });
-    console.log('member is created');
-    res.status(200).json({message: 'OK'});
-  } catch (error) {
-    console.log(error);
-  }
-})
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running");
