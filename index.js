@@ -115,6 +115,12 @@ app.post("/checkout", async (req, res) => {
       prePopulateShippingAddress: {
         firstName: customFields?.["first-name"],
         lastName: customFields?.["last-name"],
+        country: customFields?.country,
+        addressLine1: customFields?.address,
+        addressLine2: customFields?.["apartment-suite-etc"],
+        addressLine3: customFields?.city,
+        postalCode: customFields?.["postal-code"],
+        administrativeDistrictLevel1: customFields?.state,
       }
     });
 
@@ -126,6 +132,40 @@ app.post("/checkout", async (req, res) => {
     console.log(error);
   }
 });
+
+app.post("/apply", async (req, res) => {
+  const data = req.body
+  try {
+
+    const member = await memberstack.members.create({
+      email: data.Email,
+      password: data.Password,
+      customFields: {
+        address: data.Address,
+        city: data.City,
+        state: data.State,
+        'apartment-suite-etc': data.Appartment,
+        'company-name': data['Company-name'],
+        country: data.Country,
+        'first-name': data['First-name'],
+        'last-name': data['Last-name'],
+        'phone-number': data['Phone-number'],
+        position: data.Position,
+        'postal-code': data['Postal-code'],
+        'state-or-province': data.State,
+        'tax-id': data['Tax-ID'],
+        'website': data.Website
+      },
+      plans: [{
+       "planId": "pln_lead-yqn404py"
+     }]
+    });
+    console.log('member is created');
+    res.status(200).json({message: 'OK'});
+  } catch (error) {
+    console.log(error);
+  }
+})
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running");
