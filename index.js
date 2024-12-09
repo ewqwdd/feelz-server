@@ -5,8 +5,21 @@ require("dotenv").config();
 const initSubscribe = require("./subscription");
 const memberstackAdmin = require("@memberstack/admin");
 const { v4: uuid } = require("uuid");
-const lookup = require('country-code-lookup')
+const lookup = require('country-code-lookup');
+const { google } = require("googleapis");
 
+const getPromos = async () => {
+  const auth = await google.auth.getClient({
+      scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+    });
+    const sheets = google.sheets({ version: "v4", auth });
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SHEET_ID,
+      range: "promos!A:D",
+    });
+    const values = response.data.values.slice(1);
+    return values;
+}
 
 const app = express();
 
@@ -138,6 +151,21 @@ app.post("/checkout", async (req, res) => {
   }
 });
 
+app.post("/promo", async (req, res) => {
+  const code = req.body.code;
+  try {
+    const values = await getPromos();
+    const current = values.find(([promo]) => promo === code);
+    if (current) {
+      return res.json({ valid: true, discount: current[1] });
+    } else {
+      return res.json({ valid: false });
+    }
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error: error.message });
+  }
+});
 
 app.listen(process.env.PORT, () => {
   console.log("Server is running");
