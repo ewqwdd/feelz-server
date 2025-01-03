@@ -8,6 +8,7 @@ const { v4: uuid } = require("uuid");
 const lookup = require("country-code-lookup");
 const { google } = require("googleapis");
 const hubspotClient = require("./hubspot");
+const cron = require('node-cron');
 
 const getPromos = async () => {
   const auth = await google.auth.getClient({
@@ -39,6 +40,10 @@ const client = new Client({
 
 const LOCATION_ID = "L3PDBG0452N3H";
 initSubscribe(client);
+
+cron.schedule('0 0 * * *', () => {
+  initSubscribe(client);
+});
 
 app.post("/webhook", async (req, res) => {
   if (req.body.type === "payment.updated") {
